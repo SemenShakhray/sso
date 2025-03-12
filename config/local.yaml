@@ -1,6 +1,7 @@
 env: "local" #dev, prod
 
 storage_path: "./storage/sso.db"
+migration_dir: "./migrations"
 token_ttl: 1h
 grpc: 
   port: 44044
