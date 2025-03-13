@@ -1,9 +1,12 @@
-package auth
+package grpcauth
 
 import (
 	"context"
+	"errors"
 
 	protos "github.com/SemenShakhray/protos/gen/go/sso"
+	"github.com/SemenShakhray/sso/internal/service/auth"
+	"github.com/SemenShakhray/sso/internal/storage"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -12,7 +15,7 @@ import (
 
 type Auth interface {
 	Login(ctx context.Context, email, password string, appId int) (token string, err error)
-	Register(ctx context.Context, email, password string) (userID int64, err error)
+	RegisterNewUser(ctx context.Context, email, password string) (userID int64, err error)
 	IsAdmin(ctx context.Context, userID int64) (bool, error)
 }
 type serverAPI struct {
@@ -36,7 +39,10 @@ func (s *serverAPI) Login(ctx context.Context, req *protos.LoginRequest) (*proto
 	//TODO: implement login	via auth service
 	token, err := s.auth.Login(ctx, req.GetEmail(), req.GetPassword(), int(req.GetAppId()))
 	if err != nil {
-		//TODO: add error codes
+		if errors.Is(err, auth.ErrInvalidCredentials) {
+			return nil, status.Error(codes.InvalidArgument, "invalid email or password")
+		}
+
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 
@@ -51,9 +57,12 @@ func (s *serverAPI) Register(ctx context.Context, req *protos.RegisterRequest) (
 	}
 
 	//TODO: implement register via auth service
-	userID, err := s.auth.Register(ctx, req.GetEmail(), req.GetPassword())
+	userID, err := s.auth.RegisterNewUser(ctx, req.GetEmail(), req.GetPassword())
 	if err != nil {
-		//TODO: add error codes
+		if errors.Is(err, storage.ErrUserExist) {
+			return nil, status.Error(codes.AlreadyExists, "user already exists")
+		}
+
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 	return &protos.RegisterResponse{
@@ -68,9 +77,13 @@ func (s *serverAPI) IsAdmin(ctx context.Context, req *protos.IsAdminRequest) (*p
 
 	isAdmin, err := s.auth.IsAdmin(ctx, req.GetUserId())
 	if err != nil {
-		//TODO: add error codes
+		if errors.Is(err, storage.ErrAppNotFound) {
+			return nil, status.Error(codes.NotFound, "user not found")
+		}
+
 		return nil, status.Error(codes.Internal, "internal error")
 	}
+
 	return &protos.IsAdminResponse{
 		IsAdmin: isAdmin,
 	}, nil

@@ -1,5 +1,9 @@
 YAML_FILE=config/local.yaml
 
+### Run app ###
+run-app:
+	go run cmd/sso/main.go --config=config/local.yaml
+
 MIGRATION_DIR:=$(shell yq '.migration_dir' $(YAML_FILE))
 STORAGE_PATH:=$(shell yq '.storage_path' $(YAML_FILE))
 
