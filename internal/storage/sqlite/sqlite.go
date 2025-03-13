@@ -31,6 +31,10 @@ func New(storagePath string) (*Storage, error) {
 	}, nil
 }
 
+func (s *Storage) Stop() error {
+	return s.db.Close()
+}
+
 // SaveUser creates a new user in the database.
 func (s *Storage) SaveUser(ctx context.Context, email string, passHash []byte) (int64, error) {
 	const op = "storage.sqlite.SaveUser"
@@ -62,7 +66,7 @@ func (s *Storage) SaveUser(ctx context.Context, email string, passHash []byte) (
 func (s *Storage) User(ctx context.Context, email string) (models.User, error) {
 	const op = "storage.sqlite.User"
 
-	stmt, err := s.db.Prepare("SELECT id, email, passHash FROM users WHERE email=?")
+	stmt, err := s.db.Prepare("SELECT id, email, pass_hash FROM users WHERE email=?")
 	if err != nil {
 		return models.User{}, fmt.Errorf("%s: %w", op, err)
 	}
