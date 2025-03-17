@@ -1,0 +1,8 @@
+env: "prod"
+
+storage_path: "root/app/grpc-auth/sso.db"
+migration_dir: "./migrations"
+token_ttl: 1h
+grpc: 
+  port: 44044
+  timeout: 5s

@@ -21,8 +21,6 @@ func New(storagePath string) (*Storage, error) {
 
 	db, err := sql.Open("sqlite3", storagePath)
 	if err != nil {
-		// if errors.Is(err, sqlite3.Er)
-
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
